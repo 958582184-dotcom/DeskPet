@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>来串门的宠物</title>
+<style>
+  html, body {
+    margin: 0; width: 520px; height: 362px; overflow: hidden;
+    background: transparent; user-select: none; cursor: default;
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  }
+
+  #badge {
+    position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 999px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 4px 14px rgba(80, 110, 180, .18);
+    font-size: 12px; color: #4a5570; white-space: nowrap;
+  }
+  #badge b { font-size: 12.5px; color: #2f3a52; }
+  #badge span { font-size: 11px; color: #8a93a8; }
+  #badge i {
+    font-style: normal; font-size: 10px; color: #5b7cfa;
+    background: #eef2ff; border-radius: 6px; padding: 1px 5px;
+  }
+
+  #zoom {
+    position: absolute; inset: 0;
+    transform-origin: 260px 357px;
+    will-change: transform;
+  }
+  #stage {
+    position: absolute; left: 0; top: 86px; width: 520px; height: 292px;
+    transform-origin: 50% 60%;
+  }
+  #stage video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; opacity: 0; transition: opacity .18s ease;
+    pointer-events: none;
+  }
+  #stage video.front { opacity: 1; }
+
+  #bubble {
+    position: absolute; left: 50%; bottom: 268px;
+    transform: translateX(-50%) translateY(6px) scale(.96);
+    max-width: 300px; padding: 8px 14px;
+    border-radius: 14px; background: #fff;
+    box-shadow: 0 8px 22px rgba(80, 110, 180, .22);
+    font-size: 12.5px; color: #374151; line-height: 1.45;
+    opacity: 0; transition: all .18s ease; pointer-events: none;
+    word-break: break-word;
+  }
+  #bubble.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  #bubble::after {
+    content: ""; position: absolute; left: 50%; bottom: -6px;
+    width: 12px; height: 12px; margin-left: -6px;
+    background: #fff; transform: rotate(45deg);
+    box-shadow: 4px 4px 10px rgba(80, 110, 180, .12);
+  }
+
+  #hit {
+    position: absolute; left: 163px; top: 127px; width: 194px; height: 230px;
+    border-radius: 40% 40% 45% 45%;
+  }
+</style>
+</head>
+<body>
+  <div id="badge"><b id="gname">客人</b><span id="glv">Lv.1</span><i>客人</i></div>
+  <div id="bubble"></div>
+  <div id="zoom"><div id="stage">
+    <video id="vA" muted playsinline preload="auto"></video>
+    <video id="vB" muted playsinline preload="auto"></video>
+  </div></div>
+  <div id="hit"></div>
+<script src="guest.js"></script>
+</body>
+</html>

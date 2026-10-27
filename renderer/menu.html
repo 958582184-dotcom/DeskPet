@@ -1,0 +1,29 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>菜单</title>
+<style>
+  html, body { margin: 0; background: transparent; font-family: "Microsoft YaHei UI", "Microsoft YaHei", sans-serif; user-select: none; }
+  .menu {
+    margin: 6px; width: 188px; background: #fff; border-radius: 14px; padding: 6px;
+    box-shadow: 0 12px 32px rgba(17, 24, 39, .22); font-size: 12px; color: #374151;
+  }
+  .head { padding: 7px 10px 6px; font-size: 11px; font-weight: 700; color: #111827; }
+  .item { padding: 11px 12px; border-radius: 9px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+  .item:hover { background: #eef2ff; }
+  .item.dim { color: #9aa3b6; cursor: default; }
+  .item.dim:hover { background: transparent; }
+  .sep { height: 1px; background: #eef0f5; margin: 5px 8px; }
+  .arrow { color: #c3c9d6; }
+  .on { color: #5b7cfa; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="menu">
+    <div class="head" id="head">宠物资料</div>
+    <div id="list"></div>
+  </div>
+  <script src="menu.js"></script>
+</body>
+</html>

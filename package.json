@@ -1,0 +1,17 @@
+{
+  "name": "desk-pet",
+  "productName": "桌面宠物",
+  "version": "0.15.3",
+  "private": true,
+  "description": "桌面宠物：透明置顶宠物窗 + 托盘常驻 + 学校/打工养成（Electron；动画素材来自用户提供的 dsh-pet 资源）",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke",
+    "uitest": "electron . --ui-test",
+    "test": "node tools/test-game.js"
+  },
+  "devDependencies": {
+    "electron": "^43.0.0"
+  }
+}

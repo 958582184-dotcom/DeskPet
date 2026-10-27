@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>桌面宠物</title>
+<style>
+  @font-face {
+    font-family: "Candy";
+    src: url("../assets/fonts/candy.ttf") format("truetype");
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 380px; height: 560px; overflow: hidden; background: transparent; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+    color: #222836;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 10px;
+  }
+
+  .card {
+    position: relative;
+    width: 360px;
+    height: 540px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 18px 50px rgba(28, 39, 66, .22), 0 0 0 1px rgba(28, 39, 66, .06);
+    padding: 16px 18px 12px;
+    display: flex;
+    flex-direction: column;
+    -webkit-app-region: drag;
+  }
+  .card button, .card input, .card a { -webkit-app-region: no-drag; }
+  .perkbar, .perkbar * { -webkit-app-region: no-drag; }
+  .stats, .stats * { -webkit-app-region: no-drag; }
+
+  /* 顶部 */
+  header { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 50px; height: 50px; border-radius: 16px;
+    background: linear-gradient(135deg, #eef2ff, #e3ecff);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 0 1px rgba(91, 124, 250, .12);
+  }
+  .avatar img { width: 44px; height: 44px; object-fit: contain; }
+  .who { flex: 1; min-width: 0; }
+  .name { font-size: 18px; font-weight: 700; letter-spacing: .3px; }
+  .meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .pill {
+    font-size: 11px; line-height: 18px; padding: 0 8px; border-radius: 9px;
+    background: #eef2ff; color: #4b63d8; font-weight: 600;
+  }
+  .pill.state { background: #f2f4f8; color: #6b748a; font-weight: 500; }
+  .close {
+    width: 28px; height: 28px; border: 0; border-radius: 10px; cursor: pointer;
+    background: #f2f4f8; color: #7b8499; font-size: 16px; line-height: 1;
+  }
+  .close:hover { background: #e8ebf2; color: #3a4257; }
+
+  /* 状态 */
+  .stats { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .stat .top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 3px; }
+  .stat .label { font-size: 12.5px; color: #5c6579; }
+  .stat .label i { font-style: normal; margin-right: 5px; }
+  .stat .num { font-size: 12.5px; color: #9aa3b6; font-variant-numeric: tabular-nums; }
+  .track { height: 6px; border-radius: 99px; background: #f0f2f7; overflow: hidden; }
+  .track > i { display: block; height: 100%; width: 0; border-radius: 99px; transition: width .3s ease, background .3s; }
+  #barHunger { background: linear-gradient(90deg, #ffb35c, #ff8a3d); }
+  #barClean { background: linear-gradient(90deg, #6ed0ff, #38aef5); }
+  #barMood { background: linear-gradient(90deg, #ffa6c9, #f471a8); }
+  #barGrowth { background: linear-gradient(90deg, #7ee2b8, #35c48c); }
+  #barStamina { background: linear-gradient(90deg, #d9f99d, #84cc16); }
+  #barHealth { background: linear-gradient(90deg, #a5f3fc, #06b6d4); }
+  .cost {
+    position: absolute; left: 5px; top: 4px; display: inline-flex; align-items: center; gap: 1px;
+    font-size: 9px; font-weight: 700; color: #b7791f; line-height: 1;
+  }
+  .cost i { font-style: normal; font-size: 8px; }
+  .coin {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff0b3, #f2c14e 45%, #c98a00 100%);
+    box-shadow: inset 0 0 0 1px rgba(122, 90, 30, .45);
+  }
+  .cost .coin { width: 7px; height: 7px; }
+  .footMoney .coin { width: 12px; height: 12px; }
+  .cost.hide { display: none; }
+  .footMoney { display: inline-flex; align-items: center; gap: 4px; color: #8a6d3b; font-size: 12px; }
+  .footMoney i { font-style: normal; font-size: 13px; }
+  .footMoney b { font-size: 15px; color: #7a5a1e; }
+
+  .chatform { display: flex; gap: 6px; margin-top: 12px; }
+  .chatform input {
+    flex: 1; min-width: 0; border: 1px solid #e5e9f2; border-radius: 10px; padding: 8px 10px;
+    font-size: 12px; font-family: inherit; outline: none; color: #374151; background: #fbfcfe;
+  }
+  .chatform input:focus { border-color: #5b7cfa; background: #fff; }
+  .switch {
+    position: relative; width: 34px; height: 19px; border-radius: 999px;
+    background: #e3e8f1; border: 0; cursor: pointer; flex: 0 0 auto; padding: 0;
+    transition: background .15s ease;
+  }
+  .switch::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 15px; height: 15px;
+    border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+    transition: transform .15s ease;
+  }
+  .switch.on { background: #5b7cfa; }
+  .switch.on::after { transform: translateX(15px); }
+  .jbtn.small { padding: 5px 9px; font-size: 11px; }
+  .mono { font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+  .chatform input.code { flex: 0 0 64px; text-align: center; padding-left: 4px; padding-right: 4px; }
+  .offwork { display: flex; gap: 8px; align-items: center; }
+  .offwork input {
+    border: 1px solid #e5e9f2; border-radius: 10px; padding: 8px 10px; font-size: 13px;
+    font-family: inherit; color: #374151; background: #fbfcfe;
+  }
+  .empty { font-size: 11px; color: #9aa3b6; padding: 12px 4px; line-height: 1.7; }
+  .chatform .jbtn, .offwork .jbtn {
+    border: 0; border-radius: 10px; padding: 0 14px; background: #eef2ff; color: #4f6ef7;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .chatform .jbtn:hover, .offwork .jbtn:hover { background: #e0e7ff; }
+
+  .modal {
+    position: absolute; inset: 0; border-radius: 24px; display: none; align-items: center; justify-content: center;
+    background: rgba(15, 23, 42, .28); backdrop-filter: blur(2px); z-index: 40;
+  }
+  .modal.show { display: flex; }
+  .modalCard {
+    width: 280px; background: #fff; border-radius: 18px; padding: 20px 18px 16px; text-align: center;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, .25);
+  }
+  .modalCard h3 { font-size: 15px; color: #111827; margin-bottom: 8px; }
+  .modalCard p { font-size: 12px; color: #6b7280; line-height: 1.6; }
+  .modalCard .btns { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
+  .modalCard button {
+    border: 0; border-radius: 12px; padding: 9px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+  #reviveBtn { background: #5b7cfa; color: #fff; }
+  #reviveBtn:disabled { background: #cbd5e1; cursor: not-allowed; }
+  #restartBtn { background: #e7ebf3; color: #4b5563; }
+  #barActivity { background: linear-gradient(90deg, #9db8ff, #5b7cfa); }
+
+  .activity { margin-top: 6px; display: none; }
+  .activity.on { display: block; }
+  .activity .acttop { display: flex; justify-content: space-between; font-size: 11px; color: #7b8499; margin-bottom: 4px; }
+  .actmeta { margin-top: 4px; font-size: 10.5px; color: #9aa3b6; display: flex; justify-content: space-between; align-items: center; }
+  .stopBtn {
+    border: 0; border-radius: 8px; padding: 2px 8px; font-size: 10.5px; font-family: inherit;
+    background: #fdecec; color: #c0392b; cursor: pointer;
+  }
+  .stopBtn:hover { background: #fbdada; }
+
+  .growth { margin-top: 6px; }
+  .growth .top { display: flex; justify-content: space-between; color: #8d96aa; font-size: 11.5px; margin-bottom: 4px; }
+
+  /* 学历 + 三围 */
+  .edurow {
+    margin-top: 6px; display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 13px; background: #f6f8fd;
+    box-shadow: inset 0 0 0 1px rgba(91, 124, 250, .08);
+    font-size: 12px; color: #5c6579;
+  }
+  .edu-badge {
+    font-size: 12px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #6d8bff, #5b7cfa);
+    border-radius: 8px; padding: 2px 9px; margin-right: 2px;
+  }
+  .attr { display: inline-flex; align-items: center; gap: 3px; }
+  .attr b { color: #33405c; font-variant-numeric: tabular-nums; }
+  .attr .k { color: #9aa3b6; }
+  .attr.zhi .k { color: #5b7cfa; }
+  .attr.mei .k { color: #f471a8; }
+  .attr.wu .k { color: #35c48c; }
+
+  /* 钱包 */
+  .wallet {
+    margin-top: 6px; display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 13px;
+    background: linear-gradient(135deg, #fff7e8, #fff1d6);
+    box-shadow: inset 0 0 0 1px rgba(255, 176, 64, .18);
+  }
+  .wallet .coins { font-size: 13px; color: #8a6120; }
+  .wallet .coins b { font-size: 18px; color: #b46a00; margin: 0 4px; font-variant-numeric: tabular-nums; }
+  .wallet .mini {
+    margin-left: auto; border: 0; border-radius: 10px; padding: 6px 12px;
+    background: #fff; color: #b46a00; font-size: 12px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(180, 106, 0, .15);
+  }
+  .wallet .mini:hover { background: #fffdf7; }
+
+  /* 动作 */
+  .grid { margin-top: 8px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .act {
+    position: relative;
+    border: 0; border-radius: 13px; padding: 8px 2px 7px; cursor: pointer; min-height: 66px;
+    justify-content: center;
+    background: #f5f7fb; color: #3a4257;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: background .15s, transform .1s;
+  }
+  .act .ico { font-size: 17px; line-height: 1; }
+  .act .txt { font-size: 11.5px; }
+  .act .sub:empty { display: none; }
+  .act .sub { font-size: 9px; color: #9aa3b6; line-height: 1; }
+  .act:hover:not(:disabled) { background: #edf1ff; }
+  .act:active:not(:disabled) { transform: scale(.96); }
+  .act:disabled { opacity: .38; cursor: default; }
+  .act.danger { color: #c0392b; }
+
+  .perkbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 2px 0; }
+  .specBadges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px;
+    background: #eef2ff; color: #4b63d8; font-size: 11px; font-weight: 600;
+  }
+  .badge { box-shadow: 0 1px 2px rgba(15, 23, 42, .10); }
+  .badge b { font-weight: 700; font-size: 10px; color: #6b7488; }
+  .badge-img {
+    width: 34px; height: 34px; box-sizing: border-box; border-radius: 50%; object-fit: cover; display: block;
+    border: 2px solid #fff;
+    box-shadow: 0 3px 6px rgba(15, 23, 42, .35), inset 0 0 0 1px rgba(255, 255, 255, .55);
+    transition: transform .12s ease;
+  }
+  .badge-icon { background: transparent; padding: 0; border-radius: 0; margin-left: 6px; cursor: help; box-shadow: none; }
+  .badge-icon:hover .badge-img { transform: translateY(-1px) scale(1.06); }
+  .rep {
+    width: 34px; border: 1px solid #e3e8f2; border-radius: 8px; padding: 4px 2px;
+    font-size: 11px; text-align: center; font-family: inherit; color: #4b5563; background: #fff;
+  }
+  .rep:disabled { color: #c3c9d6; background: #f7f8fb; }
+  .freeStatus { margin-left: auto; font-size: 11px; color: #2f855a; background: #e9f8ef; padding: 3px 9px; border-radius: 999px; }
+  .freeStatus.used { color: #9aa3b6; background: #f2f4f8; }
+
+  .specTip {
+    position: fixed; z-index: 80; max-width: 250px; padding: 7px 10px; border-radius: 10px;
+    background: #ffffff; color: #374151; font-size: 11px; line-height: 1.55;
+    border: 1px solid #e3e8f2;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .18); pointer-events: none;
+  }
+
+  /* 底部 */
+  footer {
+    margin-top: auto; display: flex; align-items: center; gap: 8px;
+    color: #a0a8b8; font-size: 11px;
+  }
+  footer a { color: #c0392b; cursor: pointer; margin-left: auto; }
+  footer a:hover { text-decoration: underline; }
+
+  /* 弹层 */
+  .sheet {
+    position: absolute; inset: 0; z-index: 30; display: none;
+    background: #fff; border-radius: 20px; padding: 14px 16px;
+    flex-direction: column;
+    -webkit-app-region: no-drag;
+  }
+  .sheet.show { display: flex; }
+  .sheet-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sheet-head b { font-size: 15px; }
+  .sheet-head .hint { font-size: 11px; color: #9aa3b6; margin-left: auto; }
+  .sheet-head .x {
+    width: 26px; height: 26px; border: 0; border-radius: 9px; cursor: pointer;
+    background: #f2f4f8; color: #7b8499; font-size: 15px; line-height: 1;
+  }
+  .sheet-head .x:hover { background: #e8ebf2; }
+  .sheet-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+  .sheet-body::-webkit-scrollbar { width: 4px; }
+  .sheet-body::-webkit-scrollbar-thumb { background: #dfe4ef; border-radius: 4px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab {
+    flex: 1; border: 0; border-radius: 10px; padding: 7px 0; cursor: pointer;
+    background: #f4f6fb; color: #6b748a; font-size: 12.5px; font-family: inherit;
+  }
+  .tab.active { background: #eef2ff; color: #4b63d8; font-weight: 700; }
+
+  .catblock { margin-bottom: 14px; }
+  .cathead { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12.5px; color: #3a4257; }
+  .cathead .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .cathead .dot.zhi { background: #5b7cfa; }
+  .cathead .dot.mei { background: #f471a8; }
+  .cathead .dot.wu { background: #35c48c; }
+  .cathead .prog { margin-left: auto; color: #9aa3b6; font-size: 11px; }
+  .cathead .grad { color: #2f9e6b; font-size: 11px; font-weight: 700; }
+
+  .course {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 10px; background: #f8f9fc; margin-bottom: 5px;
+  }
+  .course .cname { font-size: 12.5px; color: #33405c; width: 40px; }
+  .course .cstate { flex: 1; font-size: 11px; color: #9aa3b6; }
+  .course .cstate.done { color: #2f9e6b; }
+  .course .cbtn {
+    border: 0; border-radius: 8px; padding: 5px 10px; cursor: pointer;
+    background: #eef2ff; color: #4b63d8; font-size: 11.5px; font-weight: 600; font-family: inherit;
+  }
+  .course .cbtn:hover:not(:disabled) { background: #e0e8ff; }
+  .course .cbtn:disabled { opacity: .45; cursor: default; }
+
+  .job {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 12px; background: #f8f9fc; margin-bottom: 6px;
+  }
+  .job .jmain { flex: 1; min-width: 0; }
+  .job .jname { font-size: 13px; color: #33405c; font-weight: 600; }
+  .job .jreq { word-break: keep-all; }
+  .job .jreq { font-size: 11px; color: #9aa3b6; margin-top: 2px; }
+  .job .jpay {
+    display: inline-flex; align-items: center; gap: 4px; margin-right: 6px;
+    font-size: 14px; color: #b46a00; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .job .jpay .coin { width: 11px; height: 11px; }
+  .job .jbtn {
+    border: 0; border-radius: 9px; padding: 6px 10px; cursor: pointer;
+    background: #eef2ff; color: #4b63d8; font-size: 11.5px; font-weight: 600; font-family: inherit;
+  }
+  .job .jbtn:disabled { opacity: .45; cursor: default; }
+  .job.locked { opacity: .62; }
+
+  /* 食物弹层 */
+  .popover {
+    position: absolute; z-index: 40; display: none;
+    min-width: 170px; padding: 6px;
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(28, 39, 66, .2), 0 0 0 1px rgba(28, 39, 66, .06);
+  }
+  .popover.show { display: block; }
+  .popover, .popover * { -webkit-app-region: no-drag; }
+  .popover .item {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 8px 10px; border-radius: 9px; cursor: pointer; font-size: 12.5px;
+  }
+  .popover .item:hover { background: #f0f4ff; }
+  .popover .item .row { display: flex; justify-content: space-between; gap: 14px; }
+  .popover .item small { color: #b46a00; }
+  .popover .item .eff { font-size: 10.5px; color: #9aa3b6; }
+
+  /* 轻提示 */
+  #toast {
+    position: absolute; left: 50%; bottom: 26px; transform: translate(-50%, 8px);
+    background: rgba(32, 38, 52, .92); color: #fff; font-size: 12px;
+    padding: 8px 14px; border-radius: 10px; opacity: 0; pointer-events: none;
+    transition: .2s; z-index: 50;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <div class="avatar"><img src="../assets/avatar-96.png" alt=""></div>
+      <div class="who">
+        <div class="name" id="pName">小蓝</div>
+        <div class="meta">
+          <span class="pill" id="pLevel">Lv.1</span>
+          <span class="pill state" id="pState">悠闲</span>
+          <span class="pill sick" id="sickTag" hidden>感冒</span>
+          <span class="pill away" id="awayTag" hidden>串门中</span>
+        </div>
+      </div>
+      <button class="close" id="closeBtn" title="收起面板">×</button>
+    </header>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="top"><span class="label"><i>🍚</i>饱食</span><span class="num" id="valHunger">80</span></div>
+        <div class="track"><i id="barHunger"></i></div>
+      </div>
+      <div class="stat">
+        <div class="top"><span class="label"><i>🧼</i>清洁</span><span class="num" id="valClean">80</span></div>
+        <div class="track"><i id="barClean"></i></div>
+      </div>
+      <div class="stat">
+        <div class="top"><span class="label"><i>✨</i>心情</span><span class="num" id="valMood">80</span></div>
+        <div class="track"><i id="barMood"></i></div>
+      </div>
+      <div class="stat">
+        <div class="top"><span class="label"><i>⚡</i>体力</span><span class="num" id="valStamina">100</span></div>
+        <div class="track"><i id="barStamina"></i></div>
+      </div>
+      <div class="stat">
+        <div class="top"><span class="label"><i>❤</i>健康</span><span class="num" id="valHealth">100</span></div>
+        <div class="track"><i id="barHealth"></i></div>
+      </div>
+    </section>
+
+    <section class="growth" id="growthRow">
+      <div class="top"><span>成长</span><span id="pGrowth">0 / 60</span></div>
+      <div class="track"><i id="barGrowth"></i></div>
+    </section>
+
+    <section class="activity" id="activityRow">
+      <div class="acttop"><span id="activityLabel">上课中</span><span id="activityLeft">45:00</span></div>
+      <div class="track"><i id="barActivity"></i></div>
+      <div class="actmeta"><span id="activityMeta"></span><button class="stopBtn" id="activityStop" hidden>停止</button></div>
+    </section>
+
+    <section class="edurow">
+      <span class="edu-badge" id="eduLabel">学前</span>
+      <span class="attr zhi"><span class="k">智</span><b id="attrZhi">0</b></span>
+      <span class="attr mei"><span class="k">魅</span><b id="attrMei">0</b></span>
+      <span class="attr wu"><span class="k">武</span><b id="attrWu">0</b></span>
+      <button class="mini" id="eduBtn" style="margin-left:auto;border:0;border-radius:9px;padding:5px 10px;background:#eef2ff;color:#4b63d8;font-size:11.5px;font-weight:700;cursor:pointer;">课表</button>
+    </section>
+
+
+    <section class="grid">
+      <button class="act" data-open="food"><span class="ico">🍰</span><span class="txt">吃饭</span></button>
+      <button class="act" data-open="baths"><span class="ico">🛁</span><span class="txt">洗澡</span></button>
+      <button class="act" data-open="jobs"><span class="ico">💼</span><span class="txt">打工</span></button>
+      <button class="act" data-open="school"><span class="ico">📚</span><span class="txt">学习</span></button>
+      <button class="act" data-open="toys"><span class="ico">🎮</span><span class="txt">玩耍</span></button>
+      <button class="act" data-act="sleep"><span class="ico">😴</span><span class="txt">睡觉</span></button>
+      <button class="act" data-act="cure" id="cureTile"><span class="ico" id="cureIco">🩺</span><span class="txt" id="cureTxt">看病</span></button>
+      <button class="act" data-open="more"><span class="ico">⋯</span><span class="txt">更多</span></button>
+    </section>
+
+    <section class="perkbar" id="perkBar" hidden>
+      <div class="specBadges" id="specBadges"></div>
+      <span class="freeStatus" id="freeStatus" hidden></span>
+    </section>
+
+    <footer>
+      <span class="footMoney"><i class="coin"></i><b id="pMoney">50</b></span>
+      <a id="quitBtn">退出</a>
+    </footer>
+
+    <div class="modal" id="deadModal">
+      <div class="modalCard">
+        <h3>它已经离开了…</h3>
+        <p id="deadHint">复活需要 500 金币</p>
+        <div class="btns">
+          <button id="reviveBtn">复活</button>
+          <button id="restartBtn">重新领养</button>
+        </div>
+      </div>
+    </div>
+
+        <div class="modal" id="stopModal">
+      <div class="modalCard">
+        <h3 id="stopTitle">停止上课？</h3>
+        <p id="stopHint">这一节课不会计入进度，学费不退。</p>
+        <div class="btns">
+          <button id="stopCancel" style="background:#e7ebf3;color:#4b5563;">继续</button>
+          <button id="stopConfirm" style="background:#fdecec;color:#c0392b;">停止</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="specModal">
+      <div class="modalCard" style="width:320px;text-align:left;">
+        <h3>选择专精（永久）</h3>
+        <p id="specHint">每 5 级可以选一次，选择后不可更改。</p>
+        <div id="specList" style="max-height:260px;overflow:auto;"></div>
+        <div class="btns"><button id="specLater">稍后再说</button></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet">
+      <div class="sheet-head">
+        <b id="sheetTitle">学校</b>
+        <span class="hint" id="sheetHint"></span>
+        <button class="x" id="sheetClose">×</button>
+      </div>
+      <div class="sheet-body" id="sheetBody"></div>
+    </div>
+
+    <div id="toast"></div>
+    <div class="specTip" id="specTip" hidden></div>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>
