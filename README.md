@@ -1,2 +1,3 @@
 # DeskPet
-换皮QQ宠物
+一款大肥鱼桌面宠物
+素材来自https://github.com/PC2005-cloud/dsh-pet
